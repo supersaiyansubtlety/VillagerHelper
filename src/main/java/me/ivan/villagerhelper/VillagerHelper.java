@@ -4,8 +4,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.Matrix4f;
-import net.minecraft.client.util.math.Rotation3;
+import net.minecraft.client.util.math.AffineTransformation;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -19,7 +19,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.village.TradeOffer;
+import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -40,8 +42,8 @@ public class VillagerHelper {
 
         IntegratedServer server = mc.getServer();
         if (server == null) return;
-        ServerWorld world = server.getWorld(mc.player.dimension);
-        Iterator iterator = world.getEntities(EntityType.VILLAGER, entity -> true).iterator();
+        ServerWorld world = server.getWorld(mc.player.getEntityWorld().getRegistryKey());
+        Iterator iterator = world.getEntitiesByType(EntityType.VILLAGER, entity -> true).iterator();
 
         while (iterator.hasNext()) {
             Entity entity = (Entity) iterator.next();
@@ -54,8 +56,8 @@ public class VillagerHelper {
                 while (offers.hasNext()) {
                     TradeOffer offer = (TradeOffer) offers.next();  // current villager offer
                     Item sell = offer.getSellItem().getItem();  // sell item
-                    if (sell instanceof EnchantedBookItem) {    // enchantment book trade
-                        EnchantmentHelper.getEnchantments(offer.getSellItem()).forEach((enchantment, integer) -> {  // all enchantment of the book
+                    if (sell instanceof EnchantedBookItem) {    // enchantment book trade);
+                        EnchantmentHelper.get(offer.getSellItem()).forEach((enchantment, integer) -> {  // all enchantment of the book
                             Item buy1 = offer.getOriginalFirstBuyItem().getItem();
                             Item buy2 = offer.getSecondBuyItem().getItem();
                             int price = -1;
@@ -114,10 +116,12 @@ public class VillagerHelper {
     public static void drawString(String text, Vec3d pos, float tickDelta, int color, float line) {
         drawString(text, pos.getX(), pos.getY(), pos.getZ(), tickDelta, color, line);
     }
-    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line) {
+
+    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line)
+    {
         MinecraftClient client = MinecraftClient.getInstance();
         Camera camera = client.gameRenderer.getCamera();
-        if (camera.isReady() && client.getEntityRenderManager().gameOptions != null && client.player != null) {
+        if (camera.isReady() && client.getEntityRenderDispatcher().gameOptions != null && client.player != null) {
             if (client.player.squaredDistanceTo(x, y, z) > RENDER_DISTANCE * RENDER_DISTANCE) {
                 return;
             }
@@ -136,9 +140,9 @@ public class VillagerHelper {
             RenderSystem.enableAlphaTest();
 
             VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-            float renderX = -client.textRenderer.getStringWidth(text) * 0.5F;
+            float renderX = -client.textRenderer.getWidth(text) * 0.5F;
             float renderY = client.textRenderer.getStringBoundedHeight(text, Integer.MAX_VALUE) * (-0.5F + 1.25F * line);
-            Matrix4f matrix4f = Rotation3.identity().getMatrix();
+            Matrix4f matrix4f = AffineTransformation.identity().getMatrix();
             client.textRenderer.draw(text, renderX, renderY, color, false, matrix4f, immediate, true, 0, 0xF000F0);
             immediate.draw();
 

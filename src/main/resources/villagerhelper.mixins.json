@@ -7,7 +7,7 @@
   ],
   "client": [
     "WorldRendererMixin",
-    "SettingsScreenMixin"
+    "OptionsScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
