@@ -2,36 +2,42 @@ package me.ivan.villagerhelper;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.ivan.villagerhelper.utils.CompoundTagParser;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.AffineTransformation;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.item.EnchantedBookItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.client.util.math.Matrix4f;
+import net.minecraft.client.util.math.Rotation3;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class VillagerHelper {
+    public static final String MOD_ID = "villagerhelper";
+
     private static final VillagerHelper INSTANCE = new VillagerHelper();
     public static final MinecraftClient mc = MinecraftClient.getInstance();
     public static final float RENDER_DISTANCE = 256.0F;
     public static boolean enable = false;
+
+    public static Queue<CompoundTag> tagQueue = new LinkedList<>();
+
+    // Data
+    private static Pair<String, Integer> enchantmentBookTrade;
+    private static Vec3d villagerPos;
+    private static BlockPos home;
+    private static BlockPos jobSite;
+
+    private static ListTag listTag;
 
     public static VillagerHelper getInstance() {
         return INSTANCE;
@@ -40,51 +46,42 @@ public class VillagerHelper {
     public void renderVillagerInfo(float tickDelta) {
         if (!enable) return;
 
-        IntegratedServer server = mc.getServer();
-        if (server == null) return;
-        ServerWorld world = server.getWorld(mc.player.getEntityWorld().getRegistryKey());
-        Iterator iterator = world.getEntitiesByType(EntityType.VILLAGER, entity -> true).iterator();
+        if (!tagQueue.isEmpty()) listTag = tagQueue.poll().getList("data", 10);
 
-        while (iterator.hasNext()) {
-            Entity entity = (Entity) iterator.next();
-            if (entity instanceof VillagerEntity && entity.distanceTo(mc.cameraEntity) <= RENDER_DISTANCE) {
-                VillagerEntity villager = (VillagerEntity) entity;
-                Vec3d villagerPos = villager.getPos();
-                float villagerHeightOffset = villager.isBaby() ? 0.5F : 1.0F;
-                // parse villager offers
-                Iterator offers = villager.getOffers().iterator();  // villager's offers
-                while (offers.hasNext()) {
-                    TradeOffer offer = (TradeOffer) offers.next();  // current villager offer
-                    Item sell = offer.getSellItem().getItem();  // sell item
-                    if (sell instanceof EnchantedBookItem) {    // enchantment book trade);
-                        EnchantmentHelper.get(offer.getSellItem()).forEach((enchantment, integer) -> {  // all enchantment of the book
-                            Item buy1 = offer.getOriginalFirstBuyItem().getItem();
-                            Item buy2 = offer.getSecondBuyItem().getItem();
-                            int price = -1;
-                            if (buy1 == Items.EMERALD) {
-                                price = offer.getOriginalFirstBuyItem().getCount();
-                            } else if (buy2 == Items.EMERALD) {
-                                price = offer.getSecondBuyItem().getCount();
-                            }
-                            drawString(enchantment.getName(integer).getString(), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.AQUA.getColorValue(), -0.5F);
-                            drawString(Integer.toString(price), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.GREEN.getColorValue(), 0.5F);
-                        });
-                    }
-                }
-                // bed & job site line
-                boolean hasBed = villager.getBrain().getOptionalMemory(MemoryModuleType.HOME).isPresent();
-                boolean hasJobSite = villager.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE).isPresent();
-                if (hasJobSite) {
-                    BlockPos jobSitePos = villager.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE).get().getPos();
-                    drawLine(villagerPos.getX(), villagerPos.getY() + villagerHeightOffset, villagerPos.getZ(), jobSitePos.getX() + 0.5, jobSitePos.getY() + 0.5, jobSitePos.getZ() + 0.5, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
-                    drawBoxOutlined(jobSitePos.getX(), jobSitePos.getY(), jobSitePos.getZ(), jobSitePos.getX() + 1, jobSitePos.getY() + 1, jobSitePos.getZ() + 1, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
-                }
-                if (hasBed) {
-                    BlockPos bedPos = villager.getBrain().getOptionalMemory(MemoryModuleType.HOME).get().getPos();
-                    drawLine(villagerPos.getX(), villagerPos.getY() + villagerHeightOffset, villagerPos.getZ(), bedPos.getX() + 0.5, bedPos.getY() + 0.5, bedPos.getZ() + 0.5, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
-                    drawBoxOutlined(bedPos.getX(), bedPos.getY(), bedPos.getZ(), bedPos.getX() + 1, bedPos.getY() + 0.6, bedPos.getZ() + 1, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
-                }
+        Iterator tagIterator = listTag.iterator();
+        int tagPos = 0;
+        while (tagIterator.hasNext()) {
+            CompoundTag tag = listTag.getCompound(tagPos);
+            DimensionType dimension = DimensionType.byRawId(tag.getInt("Dimension"));
+            if (mc.player.dimension != dimension) continue;
+
+            // prepare renderer
+            GlStateManager.disableTexture();
+            GlStateManager.enableBlend();
+
+            // Get villager data
+            enchantmentBookTrade = CompoundTagParser.getFirstEnchantmentBookTrade(tag);
+            villagerPos = CompoundTagParser.getPos(tag);
+            home = CompoundTagParser.getHome(tag);
+            jobSite = CompoundTagParser.getJobSite(tag);
+
+            // render data
+            if (enchantmentBookTrade != null) {
+                drawString(enchantmentBookTrade.getLeft(), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.AQUA.getColorValue(), -0.5F);
+                drawString(enchantmentBookTrade.getRight().toString(), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.GREEN.getColorValue(), 0.5F);
             }
+
+            if (home != null) {
+                drawLine(villagerPos.getX(), villagerPos.getY() + 1, villagerPos.getZ(), home.getX() + 0.5, home.getY() + 0.5, home.getZ() + 0.5, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
+                drawBoxOutlined(home.getX(), home.getY(), home.getZ(), home.getX() + 1, home.getY() + 0.6, home.getZ() + 1, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
+            }
+            if (jobSite != null) {
+                drawLine(villagerPos.getX(), villagerPos.getY() + 1, villagerPos.getZ(), jobSite.getX() + 0.5, jobSite.getY() + 0.5, jobSite.getZ() + 0.5, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
+                drawBoxOutlined(jobSite.getX(), jobSite.getY(), jobSite.getZ(), jobSite.getX() + 1, jobSite.getY() + 1, jobSite.getZ() + 1, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
+            }
+
+            tagIterator.next();
+            tagPos ++;
         }
     }
 
@@ -116,12 +113,10 @@ public class VillagerHelper {
     public static void drawString(String text, Vec3d pos, float tickDelta, int color, float line) {
         drawString(text, pos.getX(), pos.getY(), pos.getZ(), tickDelta, color, line);
     }
-
-    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line)
-    {
+    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line) {
         MinecraftClient client = MinecraftClient.getInstance();
         Camera camera = client.gameRenderer.getCamera();
-        if (camera.isReady() && client.getEntityRenderDispatcher().gameOptions != null && client.player != null) {
+        if (camera.isReady() && client.getEntityRenderManager().gameOptions != null && client.player != null) {
             if (client.player.squaredDistanceTo(x, y, z) > RENDER_DISTANCE * RENDER_DISTANCE) {
                 return;
             }
@@ -140,9 +135,9 @@ public class VillagerHelper {
             RenderSystem.enableAlphaTest();
 
             VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-            float renderX = -client.textRenderer.getWidth(text) * 0.5F;
+            float renderX = -client.textRenderer.getStringWidth(text) * 0.5F;
             float renderY = client.textRenderer.getStringBoundedHeight(text, Integer.MAX_VALUE) * (-0.5F + 1.25F * line);
-            Matrix4f matrix4f = AffineTransformation.identity().getMatrix();
+            Matrix4f matrix4f = Rotation3.identity().getMatrix();
             client.textRenderer.draw(text, renderX, renderY, color, false, matrix4f, immediate, true, 0, 0xF000F0);
             immediate.draw();
 
