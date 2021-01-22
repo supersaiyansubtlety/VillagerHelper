@@ -1,6 +1,7 @@
 package me.ivan.villagerhelper.utils;
 
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Pair;
@@ -25,7 +26,7 @@ public class CompoundTagParser {
         CompoundTag memories = getMemories(tag);
         if (memories != null) {
             if (memories.contains("minecraft:home")) {
-                CompoundTag home = memories.getCompound("minecraft:home");
+                CompoundTag home = memories.getCompound("minecraft:home").getCompound("value");
                 return new BlockPos(home.getIntArray("pos")[0], home.getIntArray("pos")[1], home.getIntArray("pos")[2]);
             }
         }
@@ -35,7 +36,7 @@ public class CompoundTagParser {
         CompoundTag memories = getMemories(tag);
         if (memories != null) {
             if (memories.contains("minecraft:job_site")) {
-                CompoundTag jobSite = memories.getCompound("minecraft:job_site");
+                CompoundTag jobSite = memories.getCompound("minecraft:job_site").getCompound("value");
                 return new BlockPos(jobSite.getIntArray("pos")[0], jobSite.getIntArray("pos")[1], jobSite.getIntArray("pos")[2]);
             }
         }
@@ -72,7 +73,7 @@ public class CompoundTagParser {
                     retPrice = buyB.getInt("Count");
                 }
                 if (sell.getString("id").equals("minecraft:enchanted_book")) {
-                    EnchantmentHelper.getEnchantments(sell.getCompound("tag").getList("StoredEnchantments", 10)).forEach((enchantment, level) -> {
+                    EnchantmentHelper.get(ItemStack.fromTag(sell)).forEach((enchantment, level) -> {
                         retName.set(enchantment.getName(level).getString());
                         flag.set(true);
                     });

@@ -9,7 +9,7 @@
   ],
   "client": [
     "WorldRendererMixin",
-    "SettingsScreenMixin",
+    "OptionsScreenMixin",
     "ClientPlayNetworkHandlerMixin"
   ],
   "injectors": {

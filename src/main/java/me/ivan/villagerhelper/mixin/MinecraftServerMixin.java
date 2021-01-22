@@ -5,11 +5,13 @@ import me.ivan.villagerhelper.network.Network;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +25,7 @@ import java.util.Map;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Shadow @Final
-    Map<DimensionType, ServerWorld> worlds;
+    Map<RegistryKey<World>, ServerWorld> worlds;
     @Shadow
     PlayerManager playerManager;
 
@@ -31,8 +33,8 @@ public class MinecraftServerMixin {
     private void tick(CallbackInfo ci) {
         ListTag listTag = new ListTag();
 
-        worlds.forEach((dimensionType, world) -> {
-            world.getEntities(EntityType.VILLAGER, entity -> true).forEach(entity -> {
+        worlds.forEach((worldRegistryKey, world) -> {
+            world.getEntitiesByType(EntityType.VILLAGER, entity -> true).forEach(entity -> {
                 listTag.add(entity.toTag(new CompoundTag()));
             });
         });
