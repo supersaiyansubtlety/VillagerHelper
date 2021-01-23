@@ -4,9 +4,12 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.ivan.villagerhelper.config.Configs;
 import me.ivan.villagerhelper.utils.CompoundTagParser;
+import me.ivan.villagerhelper.utils.DimensionConvert;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.AffineTransformation;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -14,6 +17,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
@@ -56,9 +60,7 @@ public class VillagerHelper {
         int tagPos = 0;
         while (tagIterator.hasNext()) {
             CompoundTag tag = listTag.getCompound(tagPos);
-            DimensionType dimension = DimensionType.byRawId(tag.getInt("Dimension"));
-            DimensionType playerDimension = mc.player.dimension;
-            if (!dimension.equals(playerDimension)) {
+            if (tag.getInt("Dimension") != DimensionConvert.getId(mc.player.world)) {
                 tagIterator.next();
                 tagPos ++;
                 continue;
