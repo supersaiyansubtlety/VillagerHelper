@@ -20,9 +20,8 @@ public class OptionsScreenMixin extends Screen {
 
     @Inject(at = @At("RETURN"), method = "init")
     private void drawMenuButton(CallbackInfo ci) {
-        this.villagerHelperToggleButton = this.addButton(new ButtonWidget(this.width / 2 + 5, this.height / 6 + 144 - 6, 150, 20, new TranslatableText(VillagerHelper.enable ? "villagerhelper.gui.enabled" : "villagerhelper.gui.disabled"), (button -> {
-            VillagerHelper.enable = !VillagerHelper.enable;
-            villagerHelperToggleButton.setMessage(new TranslatableText(VillagerHelper.enable ? "villagerhelper.gui.enabled" : "villagerhelper.gui.disabled"));
+        this.villagerHelperToggleButton = this.addButton(new ButtonWidget(this.width / 2 + 5, this.height / 6 + 144 - 6, 150, 20, new TranslatableText("villagerhelper.gui.config_button").getString(), (button -> {
+            MinecraftClient.getInstance().openScreen(new ConfigScreen(this));
         })));
     }
 

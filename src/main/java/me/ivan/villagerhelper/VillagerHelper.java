@@ -2,17 +2,21 @@ package me.ivan.villagerhelper;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.ivan.villagerhelper.config.Configs;
 import me.ivan.villagerhelper.utils.CompoundTagParser;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.AffineTransformation;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.client.util.math.Matrix4f;
+import net.minecraft.client.util.math.Rotation3;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.dimension.DimensionType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -23,10 +27,9 @@ import java.util.Queue;
 public class VillagerHelper {
     public static final String MOD_ID = "villagerhelper";
 
+    public static final Logger LOGGER = LogManager.getLogger();
     private static final VillagerHelper INSTANCE = new VillagerHelper();
     public static final MinecraftClient mc = MinecraftClient.getInstance();
-    public static final float RENDER_DISTANCE = 256.0F;
-    public static boolean enable = false;
 
     public static Queue<CompoundTag> tagQueue = new LinkedList<>();
 
@@ -36,35 +39,39 @@ public class VillagerHelper {
     private static BlockPos home;
     private static BlockPos jobSite;
 
-    private static ListTag listTag = null;
+    private static ListTag listTag;
 
     public static VillagerHelper getInstance() {
         return INSTANCE;
     }
 
     public void renderVillagerInfo(float tickDelta) {
-        if (!enable) return;
+        if (!Configs.ENABLE) return;
 
         if (!tagQueue.isEmpty()) listTag = tagQueue.poll().getList("data", 10);
-
-        if (listTag == null) return;
 
         Iterator tagIterator = listTag.iterator();
         int tagPos = 0;
         while (tagIterator.hasNext()) {
             CompoundTag tag = listTag.getCompound(tagPos);
-
+            DimensionType dimension = DimensionType.byRawId(tag.getInt("Dimension"));
+            if (mc.player.dimension != dimension) continue;
             // Get villager data
             enchantmentBookTrade = CompoundTagParser.getFirstEnchantmentBookTrade(tag);
             villagerPos = CompoundTagParser.getPos(tag);
             home = CompoundTagParser.getHome(tag);
             jobSite = CompoundTagParser.getJobSite(tag);
 
-            if (villagerPos.squaredDistanceTo(mc.player.getPos()) > RENDER_DISTANCE * RENDER_DISTANCE) return;
+            if (villagerPos.squaredDistanceTo(mc.player.getPos()) > Configs.RENDER_DISTANCE * Configs.RENDER_DISTANCE) {
+                tagIterator.next();
+                tagPos ++;
+                continue;
+            }
 
             // prepare renderer
             GlStateManager.disableTexture();
             GlStateManager.enableBlend();
+
 
             // render data
             if (enchantmentBookTrade != null) {
@@ -114,14 +121,10 @@ public class VillagerHelper {
     public static void drawString(String text, Vec3d pos, float tickDelta, int color, float line) {
         drawString(text, pos.getX(), pos.getY(), pos.getZ(), tickDelta, color, line);
     }
-    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line)
-    {
+    public static void drawString(String text, double x, double y, double z, float tickDelta, int color, float line) {
         MinecraftClient client = MinecraftClient.getInstance();
         Camera camera = client.gameRenderer.getCamera();
-        if (camera.isReady() && client.getEntityRenderDispatcher().gameOptions != null && client.player != null) {
-            if (client.player.squaredDistanceTo(x, y, z) > RENDER_DISTANCE * RENDER_DISTANCE) {
-                return;
-            }
+        if (camera.isReady() && client.getEntityRenderManager().gameOptions != null && client.player != null) {
             double camX = camera.getPos().x;
             double camY = camera.getPos().y;
             double camZ = camera.getPos().z;
@@ -137,9 +140,9 @@ public class VillagerHelper {
             RenderSystem.enableAlphaTest();
 
             VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-            float renderX = -client.textRenderer.getWidth(text) * 0.5F;
+            float renderX = -client.textRenderer.getStringWidth(text) * 0.5F;
             float renderY = client.textRenderer.getStringBoundedHeight(text, Integer.MAX_VALUE) * (-0.5F + 1.25F * line);
-            Matrix4f matrix4f = AffineTransformation.identity().getMatrix();
+            Matrix4f matrix4f = Rotation3.identity().getMatrix();
             client.textRenderer.draw(text, renderX, renderY, color, false, matrix4f, immediate, true, 0, 0xF000F0);
             immediate.draw();
 
