@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.options.BooleanOption;
 import net.minecraft.client.options.DoubleOption;
 import net.minecraft.client.options.Option;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 
 public class ConfigScreen extends Screen {
@@ -22,7 +23,7 @@ public class ConfigScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        listWidget = new ButtonListWidget(this.minecraft, this.width, this.height, 64, this.height - 32, 25);
+        listWidget = new ButtonListWidget(MinecraftClient.getInstance(), this.width, this.height, 64, this.height - 32, 25);
         listWidget.addAll(new Option[]{
                 new BooleanOption(
                         "villagerhelper.gui.config.toggle",
@@ -34,11 +35,11 @@ public class ConfigScreen extends Screen {
                         0, 512, 8,
                         gameOptions -> Configs.RENDER_DISTANCE,
                         (gameOptions, aDouble) -> Configs.RENDER_DISTANCE = aDouble,
-                        (gameOptions, doubleOption) -> new TranslatableText("villagerhelper.gui.config.render_distance", Configs.RENDER_DISTANCE).getString()
+                        (gameOptions, doubleOption) -> new TranslatableText("villagerhelper.gui.config.render_distance", Configs.RENDER_DISTANCE)
                 )
         });
         this.children.add(listWidget);
-        this.addButton(new ButtonWidget(this.width / 2 - 100, this.height / 6 + 168, 200, 20, new TranslatableText("villagerhelper.gui.config.done").getString(), (buttonWidget) -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 100, this.height / 6 + 168, 200, 20, new TranslatableText("villagerhelper.gui.config.done"), (buttonWidget) -> {
             this.onClose();
         }));
     }
@@ -50,9 +51,9 @@ public class ConfigScreen extends Screen {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float delta) {
-        this.renderBackground();
-        this.listWidget.render(mouseX, mouseY, delta);
-        super.render(mouseX, mouseY, delta);
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        this.renderBackground(matrices);
+        this.listWidget.render(matrices, mouseX, mouseY, delta);
+        super.render(matrices, mouseX, mouseY, delta);
     }
 }
