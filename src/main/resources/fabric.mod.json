@@ -18,7 +18,8 @@
 
   "environment": "*",
   "entrypoints": {
-    "main": [
+    "client": [
+      "me.ivan.villagerhelper.VillagerHelperClientInit"
     ]
   },
   "mixins": [

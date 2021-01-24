@@ -9,7 +9,6 @@
   ],
   "client": [
     "WorldRendererMixin",
-    "TitleScreenMixin",
     "OptionsScreenMixin",
     "ClientPlayNetworkHandlerMixin"
   ],

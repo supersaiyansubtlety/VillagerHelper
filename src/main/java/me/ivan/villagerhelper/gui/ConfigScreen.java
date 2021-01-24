@@ -30,6 +30,21 @@ public class ConfigScreen extends Screen {
                         gameOptions -> Configs.ENABLE,
                         (gameOptions, aBoolean) -> Configs.ENABLE = aBoolean
                 ),
+                new BooleanOption(
+                        "villagerhelper.gui.config.librarian_trade",
+                        gameOptions -> Configs.LIBRARIAN_TRADE,
+                        (gameOptions, aBoolean) -> Configs.ENABLE = aBoolean
+                ),
+                new BooleanOption(
+                        "villagerhelper.gui.config.job_site_line",
+                        gameOptions -> Configs.JOB_SITE_LINE,
+                        (gameOptions, aBoolean) -> Configs.ENABLE = aBoolean
+                ),
+                new BooleanOption(
+                        "villagerhelper.gui.config.bed_line",
+                        gameOptions -> Configs.BED_LINE,
+                        (gameOptions, aBoolean) -> Configs.ENABLE = aBoolean
+                ),
                 new DoubleOption(
                         "villagerhelper.gui.config.render_distance",
                         0, 512, 8,

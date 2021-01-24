@@ -82,16 +82,16 @@ public class VillagerHelper {
 
 
             // render data
-            if (enchantmentBookTrade != null) {
+            if (enchantmentBookTrade != null && Configs.LIBRARIAN_TRADE) {
                 drawString(enchantmentBookTrade.getLeft(), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.AQUA.getColorValue(), -0.5F);
                 drawString(enchantmentBookTrade.getRight().toString(), villagerPos.getX(), villagerPos.getY() + 2.5, villagerPos.getZ(), tickDelta, Formatting.GREEN.getColorValue(), 0.5F);
             }
 
-            if (home != null) {
+            if (home != null && Configs.BED_LINE) {
                 drawLine(villagerPos.getX(), villagerPos.getY() + 1, villagerPos.getZ(), home.getX() + 0.5, home.getY() + 0.5, home.getZ() + 0.5, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
                 drawBoxOutlined(home.getX(), home.getY(), home.getZ(), home.getX() + 1, home.getY() + 0.6, home.getZ() + 1, new Color(Formatting.RED.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
             }
-            if (jobSite != null) {
+            if (jobSite != null && Configs.JOB_SITE_LINE) {
                 drawLine(villagerPos.getX(), villagerPos.getY() + 1, villagerPos.getZ(), jobSite.getX() + 0.5, jobSite.getY() + 0.5, jobSite.getZ() + 0.5, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera(), tickDelta);
                 drawBoxOutlined(jobSite.getX(), jobSite.getY(), jobSite.getZ(), jobSite.getX() + 1, jobSite.getY() + 1, jobSite.getZ() + 1, new Color(Formatting.BLUE.getColorValue()), 5.0F, mc.gameRenderer.getCamera());
             }

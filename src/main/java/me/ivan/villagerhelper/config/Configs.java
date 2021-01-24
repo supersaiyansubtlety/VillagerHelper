@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import me.ivan.villagerhelper.VillagerHelper;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.HashMap;
@@ -16,8 +15,12 @@ import java.util.Map;
 public class Configs {
     private static final File CONFIG_FILE = new File("config/" + VillagerHelper.MOD_ID +".json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static boolean ENABLE = false;
+    public static Boolean ENABLE = false;
+    public static Boolean LIBRARIAN_TRADE = true;
+    public static Boolean JOB_SITE_LINE = true;
+    public static Boolean BED_LINE = true;
     public static double RENDER_DISTANCE = 128.0F;
+
 
     public static void readConfigFile() {
         try {
