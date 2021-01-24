@@ -40,7 +40,8 @@ public class ConfigScreen extends Screen {
         });
         this.children.add(listWidget);
         this.addButton(new ButtonWidget(this.width / 2 - 100, this.height / 6 + 168, 200, 20, new TranslatableText("villagerhelper.gui.config.done"), (buttonWidget) -> {
-            this.onClose();
+            MinecraftClient.getInstance().openScreen(this.parent);
+            Configs.writeConfigFile();
         }));
     }
 

@@ -2,6 +2,7 @@ package me.ivan.villagerhelper.mixin;
 
 import io.netty.buffer.Unpooled;
 import me.ivan.villagerhelper.network.Network;
+import me.ivan.villagerhelper.utils.DimensionConvert;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -36,7 +37,7 @@ public class MinecraftServerMixin {
         worlds.forEach((worldRegistryKey, world) -> {
             world.getEntitiesByType(EntityType.VILLAGER, entity -> true).forEach(entity -> {
                 CompoundTag tag = entity.toTag(new CompoundTag());
-                tag.putString("Dimension", worldRegistryKey.getValue().toString());
+                tag.putInt("Dimension", DimensionConvert.getId(worldRegistryKey.getValue().toString()));
                 listTag.add(tag);
             });
         });
