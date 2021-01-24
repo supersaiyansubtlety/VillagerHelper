@@ -1,5 +1,6 @@
 package me.ivan.villagerhelper.utils;
 
+import me.ivan.villagerhelper.VillagerHelper;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +28,13 @@ public class CompoundTagParser {
         if (memories != null) {
             if (memories.contains("minecraft:home")) {
                 CompoundTag home = memories.getCompound("minecraft:home").getCompound("value");
-                return new BlockPos(home.getIntArray("pos")[0], home.getIntArray("pos")[1], home.getIntArray("pos")[2]);
+                int[] homePos = home.getIntArray("pos");
+                // 1.14 ~ 1.15
+                if (homePos.length != 3) {
+                    home = memories.getCompound("minecraft:home");
+                    homePos = home.getIntArray("pos");
+                }
+                return new BlockPos(homePos[0], homePos[1], homePos[2]);
             }
         }
         return null;
@@ -37,7 +44,13 @@ public class CompoundTagParser {
         if (memories != null) {
             if (memories.contains("minecraft:job_site")) {
                 CompoundTag jobSite = memories.getCompound("minecraft:job_site").getCompound("value");
-                return new BlockPos(jobSite.getIntArray("pos")[0], jobSite.getIntArray("pos")[1], jobSite.getIntArray("pos")[2]);
+                int[] jobSitePos = jobSite.getIntArray("pos");
+                // 1.14 ~ 1.15
+                if (jobSitePos.length != 3) {
+                    jobSite = memories.getCompound("minecraft:job_site");
+                    jobSitePos = jobSite.getIntArray("pos");
+                }
+                return new BlockPos(jobSitePos[0], jobSitePos[1], jobSitePos[2]);
             }
         }
         return null;
