@@ -55,11 +55,13 @@ public class VillagerHelper {
 
         if (listTag == null) return;
         if (mc.player == null) return;
+        if (mc.player.world == null) return;
 
         Iterator tagIterator = listTag.iterator();
         int tagPos = 0;
         while (tagIterator.hasNext()) {
             CompoundTag tag = listTag.getCompound(tagPos);
+            if (mc.player.world == null) continue;
             if (tag.getInt("Dimension") != DimensionConvert.getId(mc.player.world)) {
                 tagIterator.next();
                 tagPos ++;
